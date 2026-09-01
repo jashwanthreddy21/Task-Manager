@@ -22,8 +22,20 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False
 )
 
+_db_initialized = False
+
+async def ensure_db_initialized():
+    global _db_initialized
+    if not _db_initialized:
+        try:
+            await init_db()
+            _db_initialized = True
+        except Exception as e:
+            print("DB init error:", e)
+
 # Dependency to get async DB session
 async def get_db():
+    await ensure_db_initialized()
     async with AsyncSessionLocal() as session:
         try:
             yield session
@@ -45,3 +57,4 @@ async def init_db():
         from backend.app.models.activity import Activity
         
         await conn.run_sync(Base.metadata.create_all)
+
