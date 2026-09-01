@@ -13,11 +13,16 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
     REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
     
-    # Fallback to sqlite if postgres is not configured
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", 
-        "sqlite+aiosqlite:///./tasks.db"
-    )
+    # Database connection URL (defaults to local SQLite if POSTGRES is not provided)
+    @property
+    def DATABASE_URL(self) -> str:
+        url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./tasks.db")
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
+
     
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads")
     
