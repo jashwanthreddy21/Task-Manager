@@ -17,9 +17,10 @@ class Settings:
     @property
     def DATABASE_URL(self) -> str:
         from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
-        url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./tasks.db")
+        url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:////tmp/tasks.db")
         if url.startswith("sqlite"):
             return url
+
 
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
