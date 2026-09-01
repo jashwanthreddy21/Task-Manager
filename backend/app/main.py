@@ -32,16 +32,27 @@ app.add_middleware(
 # Startup Event: Automatically initialize Database Tables (excellent for zero-config run)
 @app.on_event("startup")
 async def on_startup():
-    # Make sure uploads directories exist
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    os.makedirs(os.path.join(settings.UPLOAD_DIR, "avatars"), exist_ok=True)
-    os.makedirs(os.path.join(settings.UPLOAD_DIR, "attachments"), exist_ok=True)
+    # Make sure uploads directories exist if filesystem is writable
+    try:
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        os.makedirs(os.path.join(settings.UPLOAD_DIR, "avatars"), exist_ok=True)
+        os.makedirs(os.path.join(settings.UPLOAD_DIR, "attachments"), exist_ok=True)
+    except Exception:
+        pass
     
     # Initialize db schema
-    await init_db()
+    try:
+        await init_db()
+    except Exception as e:
+        print("Database initialization note:", e)
 
 # Serve Static Uploaded Files (avatars & attachments)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+try:
+    if os.path.exists(settings.UPLOAD_DIR):
+        app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+except Exception:
+    pass
+
 
 # WebSocket Endpoint for real-time updates and notifications
 @app.websocket("/ws")
